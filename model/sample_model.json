@@ -1,0 +1,145 @@
+{
+    "components": [
+        {
+            "id": "Main",
+            "kind": "function",
+            "module": "main",
+            "name": "main",
+            "role": "entrypoint",
+            "description": "Application entry point function"
+        },
+        {
+            "id": "StdinInputAdapter",
+            "kind": "class",
+            "module": "in.stdin_adapter",
+            "name": "StdinInputAdapter",
+            "role": "input_adapter",
+            "methods": [
+                {
+                    "name": "read",
+                    "description": "Read text from standard input"
+                }
+            ]
+        },
+        {
+            "id": "FileIOAdapter",
+            "kind": "class",
+            "module": "out.file_adapter",
+            "name": "FileIOAdapter",
+            "role": "file_io_adapter",
+            "methods": [
+                {
+                    "name": "__init__",
+                    "description": "Initialize with input and output file paths"
+                },
+                {
+                    "name": "read_file",
+                    "description": "Read content from input file"
+                },
+                {
+                    "name": "write_file",
+                    "description": "Write content to output file"
+                }
+            ]
+        },
+        {
+            "id": "ProcessUseCase",
+            "kind": "class",
+            "module": "core.usecase",
+            "name": "ProcessUseCase",
+            "role": "usecase",
+            "methods": [
+                {
+                    "name": "execute",
+                    "description": "Application use case: read input, merge with existing file, write result"
+                }
+            ]
+        },
+        {
+            "id": "User",
+            "kind": "external_actor",
+            "name": "User",
+            "role": "end_user"
+        },
+        {
+            "id": "FileSystem",
+            "kind": "external_system",
+            "name": "File System",
+            "role": "file_storage"
+        }
+    ],
+    "relations": [
+        {
+            "source": "User",
+            "target": "Main",
+            "kind": "runs",
+            "detail": "User runs the script (__main__)"
+        },
+        {
+            "source": "Main",
+            "target": "StdinInputAdapter",
+            "kind": "instantiates",
+            "detail": "stdin_adapter = StdinInputAdapter()"
+        },
+        {
+            "source": "Main",
+            "target": "FileIOAdapter",
+            "kind": "instantiates",
+            "detail": "file_io = FileIOAdapter('data/input.txt', 'data/output.txt')"
+        },
+        {
+            "source": "Main",
+            "target": "ProcessUseCase",
+            "kind": "instantiates",
+            "detail": "usecase = ProcessUseCase(stdin_adapter, file_io)"
+        },
+        {
+            "source": "Main",
+            "target": "ProcessUseCase.execute",
+            "kind": "calls",
+            "detail": "result = usecase.execute()"
+        },
+        {
+            "source": "Main",
+            "target": "User",
+            "kind": "outputs",
+            "detail": "print('==== result ===='); print(result)"
+        },
+        {
+            "source": "ProcessUseCase.execute",
+            "target": "StdinInputAdapter.read",
+            "kind": "calls",
+            "detail": "input_text = self.input_adapter.read()"
+        },
+        {
+            "source": "StdinInputAdapter.read",
+            "target": "User",
+            "kind": "interacts",
+            "detail": "print('Enter some text:'); user types input()"
+        },
+        {
+            "source": "ProcessUseCase.execute",
+            "target": "FileIOAdapter.read_file",
+            "kind": "calls",
+            "detail": "existing = self.file_io_adapter.read_file()"
+        },
+        {
+            "source": "FileIOAdapter.read_file",
+            "target": "FileSystem",
+            "kind": "reads",
+            "detail": "read data from input_path (e.g. 'data/input.txt')"
+        },
+        {
+            "source": "ProcessUseCase.execute",
+            "target": "FileIOAdapter.write_file",
+            "kind": "calls",
+            "detail": "self.file_io_adapter.write_file(new_content)"
+        },
+        {
+            "source": "FileIOAdapter.write_file",
+            "target": "FileSystem",
+            "kind": "writes",
+            "detail": "write new_content to output_path (e.g. 'data/output.txt')"
+        }
+    ]
+}

@@ -1,0 +1,53 @@
+@startuml
+actor User
+
+participant "main()" as Main
+participant "ProcessUseCase" as UseCase
+participant "StdinInputAdapter" as Stdin
+participant "FileIOAdapter" as FileIO
+database "File System" as FS
+
+' ユーザーがスクリプトを実行
+User -> Main : run script (__main__)
+activate Main
+
+' オブジェクト生成
+Main -> Stdin : new StdinInputAdapter()
+Main -> FileIO : new FileIOAdapter(\n  "data/input.txt",\n  "data/output.txt")
+Main -> UseCase : new ProcessUseCase(\n  stdin_adapter,\n  file_io)
+
+' ユースケース実行
+Main -> UseCase : execute()
+activate UseCase
+
+' 標準入力から読み取り
+UseCase -> Stdin : read()
+activate Stdin
+Stdin -> User : "Enter some text:"
+User --> Stdin : 入力文字列
+Stdin --> UseCase : input_text
+deactivate Stdin
+
+' 既存ファイルの読み取り
+UseCase -> FileIO : read_file()
+activate FileIO
+FileIO -> FS : read "data/input.txt"
+FS --> FileIO : existing content or ""
+FileIO --> UseCase : existing
+deactivate FileIO
+
+' ファイルへの書き込み
+UseCase -> FileIO : write_file(new_content)
+activate FileIO
+FileIO -> FS : write "data/output.txt"\nwith new_content
+deactivate FileIO
+
+' 結果を main に返す
+UseCase --> Main : result (new_content)
+deactivate UseCase
+
+' 結果をユーザーに出力
+Main -> User : print "==== result ===="\nprint(result)
+deactivate Main
+
+@enduml
