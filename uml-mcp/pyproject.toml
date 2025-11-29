@@ -1,0 +1,22 @@
+[project]
+name = "uml-mcp"
+version = "0.1.0"
+description = ""
+authors = [{ name = "behike56", email = "fxy.x@lambda-publishing.com" }]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.poetry]
+packages = [{ include = "uml_mcp", from = "src" }]
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.14.7"
+pytest = "^9.0.1"
+sphinx = "^8.2.3"
+sphinx-autodoc-typehints = "^3.5.2"
+myst-parser = "^4.0.1"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
