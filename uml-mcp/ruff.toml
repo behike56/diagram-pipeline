@@ -1,0 +1,58 @@
+# ruff.toml — Ruff 設定ファイル
+
+# ----------------------------
+# Ruff 全体の基本設定
+# ----------------------------
+line-length = 88         # 1行あたりの最大文字数（好みに応じて変更可）
+indent-width = 4         # インデント幅
+target-version = "py314" # 対象 Python バージョン（例: py311）
+
+# 除外するディレクトリ・ファイルパターン (必要に応じて調整)
+extend-exclude = [
+    ".venv",
+    ".ruff_cache",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+    ".git",
+]
+
+# ----------------------------
+# Lint (静的解析) に関する設定
+# ----------------------------
+[lint]
+# 有効にするチェックのルールセット
+select = [
+    # pycodestyle 警告・エラー
+    "E",
+    # Pyflakes (未使用変数・未使用 import など)
+    "F",
+    # isort 相当のインポート整理
+    "I",
+    # 型ヒント / 命名 / その他ツール
+    #"ANN",
+    #"B",  # flake8-bugbear 系
+    #"UP", # pyupgrade 系
+]
+
+# 無視するチェックコード (必要なら)
+ignore = [
+    # 例: 長すぎる行の警告を無視
+    # "E501",
+]
+
+# ファイルごとの無視設定 (例: __init__.py では未使用 import を許すなど)
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]
+# 例: テストディレクトリのみ別設定
+# "tests/**/*.py" = ["E501"]
+
+# ----------------------------
+# Formatter (整形) に関する設定 (必要なら)
+# ----------------------------
+[format]
+# 文字列のクォートスタイル（例: double / single）
+quote-style = "double"
+# インデントスタイル (space / tab)
+indent-style = "space"
