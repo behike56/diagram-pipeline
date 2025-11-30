@@ -1,78 +1,91 @@
 # uml_mcp_server.py
-import json
-import sys
+from __future__ import annotations
+
+import os
 from typing import Any, Dict
+
+from fastmcp import FastMCP
 
 from .uml_parser import parse_python_to_sequence_uml_json
 from .uml_to_plantuml import sequence_uml_json_to_plantuml
 
+# MCP サーバーインスタンス
+mcp = FastMCP(
+    name="uml-sequence-diagram",
+    instructions=(
+        "Python コードからシーケンス図用の UML JSON と "
+        "PlantUML を生成する MCP サーバーです。"
+    ),
+    version="1.0.0",
+)
 
-def handle_request(request: Dict[str, Any]) -> Dict[str, Any]:
+
+@mcp.tool
+def parse_code_to_uml_json(
+    code: str,
+    language: str = "python",
+    mode: str = "sequence",
+) -> Dict[str, Any]:
     """
-    非常に簡易な JSON-RPC 風プロトコル:
-    {
-      "id": 1,
-      "method": "parse_code_to_uml_json",
-      "params": { ... }
-    }
-    """
-    method = request.get("method")
-    params = request.get("params", {})
-    req_id = request.get("id")
+    ソースコードを UML シーケンス図用の JSON に変換するツール。
 
-    try:
-        if method == "parse_code_to_uml_json":
-            language = params.get("language", "python")
-            code = params.get("code", "")
-            mode = params.get("mode", "sequence")
+    Args:
+        code: 解析対象のソースコード文字列。
+        language: 言語。現在は "python" のみサポート。
+        mode: ダイアグラム種別。現在は "sequence" のみサポート。
 
-            if language != "python":
-                raise ValueError("現在は python のみ対応です")
-            if mode != "sequence":
-                raise ValueError("現在は sequence モードのみ対応です")
-
-            uml_json = parse_python_to_sequence_uml_json(code)
-            result = {"uml_json": uml_json}
-
-        elif method == "uml_json_to_plantuml":
-            uml_json = params.get("uml_json")
-            if not uml_json:
-                raise ValueError("uml_json が必要です")
-            plantuml = sequence_uml_json_to_plantuml(uml_json)
-            result = {"plantuml": plantuml}
-
-        else:
-            raise ValueError(f"未知のメソッドです: {method}")
-
-        return {"jsonrpc": "2.0", "id": req_id, "result": result}
-
-    except Exception as e:
-        return {
-            "jsonrpc": "2.0",
-            "id": req_id,
-            "error": {"code": -32000, "message": str(e)},
+    Returns:
+        {
+          "uml_json": <parse_python_to_sequence_uml_json() が返す JSON オブジェクト>
         }
-
-
-def main() -> None:
     """
-    標準入力から 1 行ごとに JSON を受け取り、
-    標準出力に JSON を返す簡易サーバ。
-    実際の MCP 環境では ChatGPT 側がこのプロセスと通信します。
-    """
-    for line in sys.stdin:
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            request = json.loads(line)
-        except json.JSONDecodeError:
-            continue
+    if language != "python":
+        raise ValueError("現在は language='python' のみサポートしています。")
+    if mode != "sequence":
+        raise ValueError("現在は mode='sequence' のみサポートしています。")
 
-        response = handle_request(request)
-        sys.stdout.write(json.dumps(response) + "\n")
-        sys.stdout.flush()
+    uml_json = parse_python_to_sequence_uml_json(code)
+    return {"uml_json": uml_json}
+
+
+@mcp.tool
+def uml_json_to_plantuml(uml_json: Dict[str, Any]) -> Dict[str, str]:
+    """
+    UML JSON を PlantUML のシーケンス図記法に変換するツール。
+
+    Args:
+        uml_json: parse_code_to_uml_json が返した "uml_json" を想定。
+
+    Returns:
+        {
+          "plantuml": "<PlantUML ソースコード>"
+        }
+    """
+    plantuml = sequence_uml_json_to_plantuml(uml_json)
+    return {"plantuml": plantuml}
 
 
 if __name__ == "__main__":
-    main()
+    """
+    開発用には stdio, ChatGPT 等からリモート接続するときは HTTP で起動できるようにしています。
+
+    - 環境変数 MCP_TRANSPORT=stdio  (デフォルト)  → ローカル用（Claude Desktop, Cursor など）
+    - 環境変数 MCP_TRANSPORT=http               → ChatGPT などから HTTP 経由で接続
+    """
+    transport = os.getenv("MCP_TRANSPORT", "stdio")
+
+    if transport == "http":
+        host = os.getenv("MCP_HOST", "0.0.0.0")
+        port = int(os.getenv("MCP_PORT", "8000"))
+        path = os.getenv("MCP_HTTP_PATH", "/mcp")
+
+        # FastMCP v2 の HTTP トランスポート（ChatGPT などのリモートクライアント向け）:contentReference[oaicite:0]{index=0}
+        mcp.run(
+            transport="http",
+            host=host,
+            port=port,
+            path=path,
+        )
+    else:
+        # デフォルトは stdio（ローカル MCP クライアント向け）
+        mcp.run(transport="stdio")
