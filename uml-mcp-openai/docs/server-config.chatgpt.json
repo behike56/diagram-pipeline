@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "uml-mcp-openai": {
+      "command": "poetry",
+      "args": ["run", "uml-mcp-openai"],
+      "env": {
+        "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY"
+      }
+    }
+  }
+}
+
+
