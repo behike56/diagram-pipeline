@@ -6,6 +6,7 @@
 line-length = 88         # 1行あたりの最大文字数（好みに応じて変更可）
 indent-width = 4         # インデント幅
 target-version = "py314" # 対象 Python バージョン（例: py311）
+src = ["src"]            # First-party パッケージ探索ルート
 
 # 除外するディレクトリ・ファイルパターン (必要に応じて調整)
 extend-exclude = [
@@ -41,6 +42,16 @@ ignore = [
     # 例: 長すぎる行の警告を無視
     # "E501",
 ]
+
+# isort 相当の詳細設定（インポート整形）
+[lint.isort]
+known-first-party = ["uml_mcp"]
+known-third-party = ["fastmcp"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+combine-as-imports = true
+split-on-trailing-comma = true
+order-by-type = true
+lines-after-imports = 2
 
 # ファイルごとの無視設定 (例: __init__.py では未使用 import を許すなど)
 [lint.per-file-ignores]
